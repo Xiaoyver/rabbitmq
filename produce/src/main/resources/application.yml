@@ -22,3 +22,5 @@ spring:
     username: admin
     password: admin
     virtual-host: /liu
+    publisher-confirm-type: correlated
+    publisher-returns: true
