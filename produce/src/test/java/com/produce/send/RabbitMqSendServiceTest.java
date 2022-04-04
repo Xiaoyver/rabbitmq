@@ -6,7 +6,10 @@ import com.mq.utils.JsonUtil;
 import com.mq.utils.RabbitMqUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.util.concurrent.SettableListenableFuture;
 
 import javax.annotation.Resource;
 
@@ -18,6 +21,17 @@ class RabbitMqSendServiceTest {
     private RabbitMqSendService rabbitMqSendService;
     @Resource
     private RabbitMqUtils rabbitMqUtils;
+    @Resource
+    private RabbitTemplate rabbitTemplate;
+
+    @Test
+    void testConfirm() {
+        CorrelationData correlationData = new CorrelationData();
+        SettableListenableFuture<CorrelationData.Confirm> future = correlationData.getFuture();
+        future.addCallback((success) -> log.info("消息监听成功回调：{}", success), (ex) -> log.error("消息监听失败回调：{}", ex.getMessage()));
+        rabbitTemplate.convertAndSend("not_exist", "work_msg_queue", 123, correlationData);
+        log.info("发送消息结束");
+    }
 
     @Test
     void send() {
@@ -35,7 +49,7 @@ class RabbitMqSendServiceTest {
 
     @Test
     void createQueue() {
-        RabbitMqListenerEntity   rabbitMqListenerEntity=    RabbitMqListenerEntity
+        RabbitMqListenerEntity rabbitMqListenerEntity = RabbitMqListenerEntity
                 .builder()
                 .rabbitMqQueue(RabbitMqQueue
                         .builder()
